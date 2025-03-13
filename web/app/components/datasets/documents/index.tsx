@@ -248,6 +248,7 @@ const Documents: FC<IDocumentsProps> = ({ datasetId }) => {
   } = useEditDocumentMetadata({
     datasetId,
     dataset,
+    onUpdateDocList: mutate,
   })
 
   return (
