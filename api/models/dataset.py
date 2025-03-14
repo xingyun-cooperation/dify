@@ -763,7 +763,7 @@ class DocumentSegment(db.Model):  # type: ignore[name-defined]
         # Reconstruct the text with signed URLs
         offset = 0
         for start, end, signed_url in signed_urls:
-            text = text[: start + offset] + signed_url + text[end + offset:]
+            text = text[: start + offset] + signed_url + text[end + offset :]
             offset += len(signed_url) - (end - start)
 
         return text

@@ -72,17 +72,12 @@ class DraftWorkflowApi(Resource):
 
         if "application/json" in content_type:
             parser = reqparse.RequestParser()
-            parser.add_argument("graph", type=dict,
-                                required=True, nullable=False, location="json")
-            parser.add_argument("features", type=dict,
-                                required=True, nullable=False, location="json")
-            parser.add_argument(
-                "hash", type=str, required=False, location="json")
+            parser.add_argument("graph", type=dict, required=True, nullable=False, location="json")
+            parser.add_argument("features", type=dict, required=True, nullable=False, location="json")
+            parser.add_argument("hash", type=str, required=False, location="json")
             # TODO: set this to required=True after frontend is updated
-            parser.add_argument("environment_variables",
-                                type=list, required=False, location="json")
-            parser.add_argument("conversation_variables",
-                                type=list, required=False, location="json")
+            parser.add_argument("environment_variables", type=list, required=False, location="json")
+            parser.add_argument("conversation_variables", type=list, required=False, location="json")
             args = parser.parse_args()
         elif "text/plain" in content_type:
             try:
@@ -111,13 +106,11 @@ class DraftWorkflowApi(Resource):
         workflow_service = WorkflowService()
 
         try:
-            environment_variables_list = args.get(
-                "environment_variables") or []
+            environment_variables_list = args.get("environment_variables") or []
             environment_variables = [
                 variable_factory.build_environment_variable_from_mapping(obj) for obj in environment_variables_list
             ]
-            conversation_variables_list = args.get(
-                "conversation_variables") or []
+            conversation_variables_list = args.get("conversation_variables") or []
             conversation_variables = [
                 variable_factory.build_conversation_variable_from_mapping(obj) for obj in conversation_variables_list
             ]
@@ -158,13 +151,10 @@ class AdvancedChatDraftWorkflowRunApi(Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument("inputs", type=dict, location="json")
-        parser.add_argument("query", type=str, required=True,
-                            location="json", default="")
+        parser.add_argument("query", type=str, required=True, location="json", default="")
         parser.add_argument("files", type=list, location="json")
-        parser.add_argument("conversation_id",
-                            type=uuid_value, location="json")
-        parser.add_argument("parent_message_id",
-                            type=uuid_value, required=False, location="json")
+        parser.add_argument("conversation_id", type=uuid_value, location="json")
+        parser.add_argument("parent_message_id", type=uuid_value, required=False, location="json")
 
         args = parser.parse_args()
 
@@ -350,10 +340,8 @@ class DraftWorkflowRunApi(Resource):
             raise Forbidden()
 
         parser = reqparse.RequestParser()
-        parser.add_argument("inputs", type=dict, required=True,
-                            nullable=False, location="json")
-        parser.add_argument("files", type=list,
-                            required=False, location="json")
+        parser.add_argument("inputs", type=dict, required=True, nullable=False, location="json")
+        parser.add_argument("files", type=list, required=False, location="json")
         args = parser.parse_args()
 
         response = AppGenerateService.generate(
@@ -380,8 +368,7 @@ class WorkflowTaskStopApi(Resource):
         if not current_user.is_editor:
             raise Forbidden()
 
-        AppQueueManager.set_stop_flag(
-            task_id, InvokeFrom.DEBUGGER, current_user.id)
+        AppQueueManager.set_stop_flag(task_id, InvokeFrom.DEBUGGER, current_user.id)
 
         return {"result": "success"}
 
@@ -404,8 +391,7 @@ class DraftWorkflowNodeRunApi(Resource):
             raise Forbidden()
 
         parser = reqparse.RequestParser()
-        parser.add_argument("inputs", type=dict, required=True,
-                            nullable=False, location="json")
+        parser.add_argument("inputs", type=dict, required=True, nullable=False, location="json")
         args = parser.parse_args()
 
         inputs = args.get("inputs")
@@ -562,22 +548,17 @@ class ConvertToWorkflowApi(Resource):
 
         if request.data:
             parser = reqparse.RequestParser()
-            parser.add_argument("name", type=str, required=False,
-                                nullable=True, location="json")
-            parser.add_argument("icon_type", type=str,
-                                required=False, nullable=True, location="json")
-            parser.add_argument("icon", type=str, required=False,
-                                nullable=True, location="json")
-            parser.add_argument("icon_background", type=str,
-                                required=False, nullable=True, location="json")
+            parser.add_argument("name", type=str, required=False, nullable=True, location="json")
+            parser.add_argument("icon_type", type=str, required=False, nullable=True, location="json")
+            parser.add_argument("icon", type=str, required=False, nullable=True, location="json")
+            parser.add_argument("icon_background", type=str, required=False, nullable=True, location="json")
             args = parser.parse_args()
         else:
             args = {}
 
         # convert to workflow mode
         workflow_service = WorkflowService()
-        new_app_model = workflow_service.convert_to_workflow(
-            app_model=app_model, account=current_user, args=args)
+        new_app_model = workflow_service.convert_to_workflow(app_model=app_model, account=current_user, args=args)
 
         # return app id
         return {
