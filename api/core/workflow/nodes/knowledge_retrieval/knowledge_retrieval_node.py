@@ -1,7 +1,7 @@
 import json
 import logging
-import time
 from collections import defaultdict
+import time
 from collections.abc import Mapping, Sequence
 from typing import Any, Optional, cast
 
