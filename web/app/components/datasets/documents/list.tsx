@@ -517,18 +517,20 @@ const DocumentList: FC<IDocumentListProps> = ({
 
   return (
     <div className='flex flex-col relative w-full h-full'>
-      <div className='grow overflow-x-auto'>
+      <div className='relative grow overflow-x-auto'>
         <table className={`min-w-[700px] max-w-full w-full border-collapse border-0 text-sm mt-3 ${s.documentTable}`}>
           <thead className="h-8 leading-8 border-b border-divider-subtle text-text-tertiary font-medium text-xs uppercase">
             <tr>
               <td className='w-12'>
                 <div className='flex items-center' onClick={e => e.stopPropagation()}>
-                  <Checkbox
-                    className='shrink-0 mr-2'
-                    checked={isAllSelected}
-                    mixed={!isAllSelected && isSomeSelected}
-                    onCheck={onSelectedAll}
-                  />
+                  {embeddingAvailable && (
+                    <Checkbox
+                      className='shrink-0 mr-2'
+                      checked={isAllSelected}
+                      mixed={!isAllSelected && isSomeSelected}
+                      onCheck={onSelectedAll}
+                    />
+                  )}
                   #
                 </div>
               </td>
