@@ -94,10 +94,10 @@ const Header = () => {
       }
       <div className='flex items-center shrink-0'>
         <EnvNav />
-        <div className='mr-3'>
+        <div className='mr-2'>
           <PluginsNav />
         </div>
-        <AccountDropdown isMobile={isMobile} />
+        <AccountDropdown />
       </div>
       {
         (isMobile && isShowNavMenu) && (

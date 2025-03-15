@@ -2,10 +2,12 @@
 import type { FC } from 'react'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { useRouter } from 'next/navigation'
 import {
   RiBook2Line,
   RiBox3Line,
   RiFileEditLine,
+  RiGraduationCapLine,
   RiGroup3Line,
   RiGroupLine,
   RiSquareLine,
@@ -15,7 +17,10 @@ import VectorSpaceInfo from '../usage-info/vector-space-info'
 import AppsInfo from '../usage-info/apps-info'
 import UpgradeBtn from '../upgrade-btn'
 import { useProviderContext } from '@/context/provider-context'
+import { useAppContext } from '@/context/app-context'
+import Button from '@/app/components/base/button'
 import UsageInfo from '@/app/components/billing/usage-info'
+import VerifyStateModal from '@/app/education-apply/components/verify-state-modal'
 
 type Props = {
   loc: string
@@ -25,7 +30,9 @@ const PlanComp: FC<Props> = ({
   loc,
 }) => {
   const { t } = useTranslation()
-  const { plan } = useProviderContext()
+  const router = useRouter()
+  const { userProfile } = useAppContext()
+  const { plan, enableEducationPlan, isEducationAccount } = useProviderContext()
   const {
     type,
   } = plan
@@ -35,6 +42,13 @@ const PlanComp: FC<Props> = ({
     total,
   } = plan
 
+  const [showModal, setShowModal] = React.useState(false)
+  const handleVerify = () => {
+    if (userProfile.email.endsWith('.edu'))
+      router.push('/education-apply')
+    else
+      setShowModal(true)
+  }
   return (
     <div className='bg-background-section-burn rounded-2xl border-[0.5px] border-effects-highlight-lightmode-off'>
       <div className='p-6 pb-2'>
@@ -58,14 +72,22 @@ const PlanComp: FC<Props> = ({
             </div>
             <div className='system-xs-regular text-util-colors-gray-gray-600'>{t(`billing.plans.${type}.for`)}</div>
           </div>
-          {(plan.type as any) !== SelfHostedPlan.enterprise && (
-            <UpgradeBtn
-              className='shrink-0'
-              isPlain={type === Plan.team}
-              isShort
-              loc={loc}
-            />
-          )}
+          <div className='shrink-0 flex items-center gap-1'>
+            {enableEducationPlan && !isEducationAccount && (
+              <Button variant='ghost' onClick={handleVerify}>
+                <RiGraduationCapLine className='w-4 h-4 mr-1'/>
+                {t('education.toVerified')}
+              </Button>
+            )}
+            {(plan.type as any) !== SelfHostedPlan.enterprise && (
+              <UpgradeBtn
+                className='shrink-0'
+                isPlain={type === Plan.team}
+                isShort
+                loc={loc}
+              />
+            )}
+          </div>
         </div>
       </div>
       {/* Plan detail */}
@@ -92,6 +114,15 @@ const PlanComp: FC<Props> = ({
         />
 
       </div>
+      <VerifyStateModal
+        showLink
+        email={userProfile.email}
+        isShow={showModal}
+        title={t('education.rejectTitle')}
+        content={t('education.rejectContent2')}
+        onConfirm={() => setShowModal(false)}
+        onCancel={() => setShowModal(false)}
+      />
     </div>
   )
 }
