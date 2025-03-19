@@ -1,8 +1,10 @@
 import json
+import logging
 import uuid
 from contextlib import contextmanager
 from typing import Any
 
+import psycopg2.errors
 import psycopg2.extras  # type: ignore
 import psycopg2.pool  # type: ignore
 from pydantic import BaseModel, model_validator
@@ -147,7 +149,14 @@ class PGVector(BaseVector):
         if not ids:
             return
         with self._get_cursor() as cur:
-            cur.execute(f"DELETE FROM {self.table_name} WHERE id IN %s", (tuple(ids),))
+            try:
+                cur.execute(f"DELETE FROM {self.table_name} WHERE id IN %s", (tuple(ids),))
+            except psycopg2.errors.UndefinedTable:
+                # table not exists
+                logging.warning(f"Table {self.table_name} not found, skipping delete operation.")
+                return
+            except Exception as e:
+                raise e
 
     def delete_by_metadata_field(self, key: str, value: str) -> None:
         with self._get_cursor() as cur:
@@ -162,6 +171,8 @@ class PGVector(BaseVector):
         :return: List of Documents that are nearest to the query vector.
         """
         top_k = kwargs.get("top_k", 4)
+        if not isinstance(top_k, int) or top_k <= 0:
+            raise ValueError("top_k must be a positive integer")
         document_ids_filter = kwargs.get("document_ids_filter")
         where_clause = ""
         if document_ids_filter:
@@ -187,7 +198,8 @@ class PGVector(BaseVector):
 
     def search_by_full_text(self, query: str, **kwargs: Any) -> list[Document]:
         top_k = kwargs.get("top_k", 5)
-
+        if not isinstance(top_k, int) or top_k <= 0:
+            raise ValueError("top_k must be a positive integer")
         with self._get_cursor() as cur:
             document_ids_filter = kwargs.get("document_ids_filter")
             where_clause = ""
