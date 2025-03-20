@@ -81,7 +81,8 @@ class TidbOnQdrantVector(BaseVector):
     def __init__(self, collection_name: str, group_id: str, config: TidbOnQdrantConfig, distance_func: str = "Cosine"):
         super().__init__(collection_name)
         self._client_config = config
-        self._client = qdrant_client.QdrantClient(**self._client_config.to_qdrant_params())
+        self._client = qdrant_client.QdrantClient(
+            **self._client_config.to_qdrant_params())
         self._distance_func = distance_func.upper()
         self._group_id = group_id
 
@@ -105,7 +106,8 @@ class TidbOnQdrantVector(BaseVector):
     def create_collection(self, collection_name: str, vector_size: int):
         lock_name = "vector_indexing_lock_{}".format(collection_name)
         with redis_client.lock(lock_name, timeout=20):
-            collection_exist_cache_key = "vector_indexing_{}".format(self._collection_name)
+            collection_exist_cache_key = "vector_indexing_{}".format(
+                self._collection_name)
             if redis_client.get(collection_exist_cache_key):
                 return
             collection_name = collection_name or uuid.uuid4().hex
@@ -144,6 +146,10 @@ class TidbOnQdrantVector(BaseVector):
                 self._client.create_payload_index(
                     collection_name, Field.DOC_ID.value, field_schema=PayloadSchemaType.KEYWORD
                 )
+                # create document_id payload index
+                self._client.create_payload_index(
+                    collection_name, Field.DOCUMENT_ID.value, field_schema=PayloadSchemaType.KEYWORD
+                )
                 # create full text index
                 text_index_params = TextIndexParams(
                     type=TextIndexType.TEXT,
@@ -164,7 +170,8 @@ class TidbOnQdrantVector(BaseVector):
 
         added_ids = []
         for batch_ids, points in self._generate_rest_batches(texts, embeddings, metadatas, uuids, 64, self._group_id):
-            self._client.upsert(collection_name=self._collection_name, points=points)
+            self._client.upsert(
+                collection_name=self._collection_name, points=points)
             added_ids.extend(batch_ids)
 
         return added_ids
@@ -186,7 +193,8 @@ class TidbOnQdrantVector(BaseVector):
         ids_iterator = iter(ids or [uuid.uuid4().hex for _ in iter(texts)])
         while batch_texts := list(islice(texts_iterator, batch_size)):
             # Take the corresponding metadata and id for each text in a batch
-            batch_metadatas = list(islice(metadatas_iterator, batch_size)) or None
+            batch_metadatas = list(
+                islice(metadatas_iterator, batch_size)) or None
             batch_ids = list(islice(ids_iterator, batch_size))
 
             # Generate the embeddings for all the texts in a batch
@@ -232,7 +240,8 @@ class TidbOnQdrantVector(BaseVector):
                     "calling .from_texts or .add_texts on Qdrant instance."
                 )
             metadata = metadatas[i] if metadatas is not None else None
-            payloads.append({content_payload_key: text, metadata_payload_key: metadata, group_payload_key: group_id})
+            payloads.append(
+                {content_payload_key: text, metadata_payload_key: metadata, group_payload_key: group_id})
 
         return payloads
 
@@ -268,7 +277,8 @@ class TidbOnQdrantVector(BaseVector):
         from qdrant_client.http.exceptions import UnexpectedResponse
 
         try:
-            self._client.delete_collection(collection_name=self._collection_name)
+            self._client.delete_collection(
+                collection_name=self._collection_name)
         except UnexpectedResponse as e:
             # Collection does not exist, so return
             if e.status_code == 404:
@@ -311,30 +321,25 @@ class TidbOnQdrantVector(BaseVector):
             all_collection_name.append(collection.name)
         if self._collection_name not in all_collection_name:
             return False
-        response = self._client.retrieve(collection_name=self._collection_name, ids=[id])
+        response = self._client.retrieve(
+            collection_name=self._collection_name, ids=[id])
 
         return len(response) > 0
 
     def search_by_vector(self, query_vector: list[float], **kwargs: Any) -> list[Document]:
         from qdrant_client.http import models
 
-        filter = models.Filter(
-            must=[
-                models.FieldCondition(
-                    key="group_id",
-                    match=models.MatchValue(value=self._group_id),
-                ),
-            ],
-        )
+        filter = None
         document_ids_filter = kwargs.get("document_ids_filter")
         if document_ids_filter:
-            if filter.must:
-                filter.must.append(
+            filter = models.Filter(
+                must=[
                     models.FieldCondition(
                         key="metadata.document_id",
                         match=models.MatchAny(any=document_ids_filter),
                     )
-                )
+                ],
+            )
         results = self._client.search(
             collection_name=self._collection_name,
             query_vector=query_vector,
@@ -354,12 +359,14 @@ class TidbOnQdrantVector(BaseVector):
             if result.score > score_threshold:
                 metadata["score"] = result.score
                 doc = Document(
-                    page_content=result.payload.get(Field.CONTENT_KEY.value, ""),
+                    page_content=result.payload.get(
+                        Field.CONTENT_KEY.value, ""),
                     metadata=metadata,
                 )
                 docs.append(doc)
         # Sort the documents by score in descending order
-        docs = sorted(docs, key=lambda x: x.metadata["score"] if x.metadata is not None else 0, reverse=True)
+        docs = sorted(
+            docs, key=lambda x: x.metadata["score"] if x.metadata is not None else 0, reverse=True)
         return docs
 
     def search_by_full_text(self, query: str, **kwargs: Any) -> list[Document]:
@@ -369,23 +376,17 @@ class TidbOnQdrantVector(BaseVector):
         """
         from qdrant_client.http import models
 
-        scroll_filter = models.Filter(
-            must=[
-                models.FieldCondition(
-                    key="page_content",
-                    match=models.MatchText(text=query),
-                )
-            ]
-        )
+        scroll_filter = None
         document_ids_filter = kwargs.get("document_ids_filter")
         if document_ids_filter:
-            if scroll_filter.must:
-                scroll_filter.must.append(
+            scroll_filter = models.Filter(
+                must=[
                     models.FieldCondition(
                         key="metadata.document_id",
                         match=models.MatchAny(any=document_ids_filter),
                     )
-                )
+                ]
+            )
         response = self._client.scroll(
             collection_name=self._collection_name,
             scroll_filter=scroll_filter,
@@ -397,7 +398,8 @@ class TidbOnQdrantVector(BaseVector):
         documents = []
         for result in results:
             if result:
-                document = self._document_from_scored_point(result, Field.CONTENT_KEY.value, Field.METADATA_KEY.value)
+                document = self._document_from_scored_point(
+                    result, Field.CONTENT_KEY.value, Field.METADATA_KEY.value)
                 documents.append(document)
 
         return documents
@@ -424,7 +426,8 @@ class TidbOnQdrantVector(BaseVector):
 class TidbOnQdrantVectorFactory(AbstractVectorFactory):
     def init_vector(self, dataset: Dataset, attributes: list, embeddings: Embeddings) -> TidbOnQdrantVector:
         tidb_auth_binding = (
-            db.session.query(TidbAuthBinding).filter(TidbAuthBinding.tenant_id == dataset.tenant_id).one_or_none()
+            db.session.query(TidbAuthBinding).filter(
+                TidbAuthBinding.tenant_id == dataset.tenant_id).one_or_none()
         )
         if not tidb_auth_binding:
             with redis_client.lock("create_tidb_serverless_cluster_lock", timeout=900):
@@ -478,7 +481,8 @@ class TidbOnQdrantVectorFactory(AbstractVectorFactory):
         else:
             dataset_id = dataset.id
             collection_name = Dataset.gen_collection_name_by_id(dataset_id)
-            dataset.index_struct = json.dumps(self.gen_index_struct_dict(VectorType.TIDB_ON_QDRANT, collection_name))
+            dataset.index_struct = json.dumps(self.gen_index_struct_dict(
+                VectorType.TIDB_ON_QDRANT, collection_name))
 
         config = current_app.config
 
@@ -511,12 +515,14 @@ class TidbOnQdrantVectorFactory(AbstractVectorFactory):
         labels = {
             "tidb.cloud/project": "1372813089454548012",
         }
-        cluster_data = {"displayName": display_name, "region": region_object, "labels": labels}
+        cluster_data = {"displayName": display_name,
+                        "region": region_object, "labels": labels}
 
         response = requests.post(
             f"{tidb_config.api_url}/clusters",
             json=cluster_data,
-            auth=HTTPDigestAuth(tidb_config.public_key, tidb_config.private_key),
+            auth=HTTPDigestAuth(tidb_config.public_key,
+                                tidb_config.private_key),
         )
 
         if response.status_code == 200:
@@ -539,7 +545,8 @@ class TidbOnQdrantVectorFactory(AbstractVectorFactory):
         response = requests.put(
             f"{tidb_config.api_url}/clusters/{cluster_id}/password",
             json=body,
-            auth=HTTPDigestAuth(tidb_config.public_key, tidb_config.private_key),
+            auth=HTTPDigestAuth(tidb_config.public_key,
+                                tidb_config.private_key),
         )
 
         if response.status_code == 200:
