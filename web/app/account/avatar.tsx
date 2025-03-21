@@ -2,6 +2,9 @@
 import { useTranslation } from 'react-i18next'
 import { Fragment } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  RiGraduationCapFill,
+} from '@remixicon/react'
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react'
 import Avatar from '@/app/components/base/avatar'
 import { logout } from '@/service/common'
@@ -71,7 +74,15 @@ export default function AppSelector() {
                   <div className='p-1'>
                     <div className='flex flex-nowrap items-center px-3 py-2'>
                       <div className='grow'>
-                        <div className='system-md-medium break-all text-text-primary'>{userProfile.name}</div>
+                        <div className='system-md-medium break-all text-text-primary'>
+                          {userProfile.name}
+                          {isEducationAccount && (
+                            <PremiumBadge size='s' color='blue' className='ml-1 !px-2'>
+                              <RiGraduationCapFill className='mr-1 h-3 w-3' />
+                              <span className='system-2xs-medium'>EDU</span>
+                            </PremiumBadge>
+                          )}
+                        </div>
                         <div className='system-xs-regular break-all text-text-tertiary'>{userProfile.email}</div>
                       </div>
                       <Avatar avatar={userProfile.avatar_url} name={userProfile.name} size={32} />
