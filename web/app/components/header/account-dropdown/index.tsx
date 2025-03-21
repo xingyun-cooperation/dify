@@ -109,10 +109,10 @@ export default function AppSelector() {
                       <div className='grow'>
                         <div className='system-md-medium break-all text-text-primary'>{userProfile.name}</div>
                         <div className='system-xs-regular break-all text-text-tertiary'>{userProfile.email}</div>
-                      </div >
+                      </div>
                       <Avatar avatar={userProfile.avatar_url} name={userProfile.name} size={36} className='mr-3' />
-                    </div >
-                  </MenuItem >
+                    </div>
+                  </MenuItem>
                   <div className="px-1 py-1">
                     <MenuItem>
                       <Link
@@ -134,7 +134,7 @@ export default function AppSelector() {
                         <div className='system-md-regular grow px-1 text-text-secondary'>{t('common.userProfile.settings')}</div>
                       </div>
                     </MenuItem>
-                  </div >
+                  </div>
                   <div className='p-1'>
                     <MenuItem>
                       <Link
@@ -180,8 +180,7 @@ export default function AppSelector() {
                           <GithubStar className='system-2xs-medium-uppercase text-text-tertiary' />
                         </div>
                       </Link>
-                    </MenuItem>
-                    }
+                    </MenuItem>}
                     {
                       document?.body?.getAttribute('data-public-site-about') !== 'hide' && (
                         <MenuItem>
@@ -198,7 +197,7 @@ export default function AppSelector() {
                         </MenuItem>
                       )
                     }
-                  </div >
+                  </div>
                   <MenuItem>
                     <div className='p-1' onClick={() => handleLogout()}>
                       <div
@@ -211,8 +210,8 @@ export default function AppSelector() {
                       </div>
                     </div>
                   </MenuItem>
-                </MenuItems >
-              </Transition >
+                </MenuItems>
+              </Transition>
             </>
           )
         }

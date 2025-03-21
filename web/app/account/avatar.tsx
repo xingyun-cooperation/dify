@@ -2,9 +2,6 @@
 import { useTranslation } from 'react-i18next'
 import { Fragment } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  RiGraduationCapFill,
-} from '@remixicon/react'
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react'
 import Avatar from '@/app/components/base/avatar'
 import { logout } from '@/service/common'
@@ -76,11 +73,11 @@ export default function AppSelector() {
                       <div className='grow'>
                         <div className='system-md-medium break-all text-text-primary'>{userProfile.name}</div>
                         <div className='system-xs-regular break-all text-text-tertiary'>{userProfile.email}</div>
-                      </div >
+                      </div>
                       <Avatar avatar={userProfile.avatar_url} name={userProfile.name} size={32} />
-                    </div >
-                  </div >
-                </MenuItem >
+                    </div>
+                  </div>
+                </MenuItem>
                 <MenuItem>
                   <div className='p-1' onClick={() => handleLogout()}>
                     <div
@@ -91,8 +88,8 @@ export default function AppSelector() {
                     </div>
                   </div>
                 </MenuItem>
-              </MenuItems >
-            </Transition >
+              </MenuItems>
+            </Transition>
           </>
         )
       }
