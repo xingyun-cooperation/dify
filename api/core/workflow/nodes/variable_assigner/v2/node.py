@@ -133,7 +133,6 @@ class VariableAssignerNode(BaseNode[VariableAssignerNodeData]):
                         variable=variable,
                     )
 
-
         return NodeRunResult(
             status=WorkflowNodeExecutionStatus.SUCCEEDED,
             inputs=inputs,
