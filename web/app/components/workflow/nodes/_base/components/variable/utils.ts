@@ -357,6 +357,18 @@ const formatItem = (
       break
     }
 
+    case BlockEnum.Loop: {
+      const { loop_variables } = data as LoopNodeType
+      res.vars = loop_variables?.map((v) => {
+        return {
+          variable: v.label,
+          type: v.var_type,
+        }
+      }) || []
+
+      break
+    }
+
     case BlockEnum.DocExtractor: {
       res.vars = [
         {
@@ -832,6 +844,26 @@ export const toNodeAvailableVars = ({
       ],
     }
     beforeNodesOutputVars.unshift(iterationVar)
+  }
+  const isInLoop = parentNode?.data.type === BlockEnum.Loop
+  if (isInLoop) {
+    const loopNode: any = parentNode
+    const loopNodeData = loopNode?.data as LoopNodeType
+    const loopVariables = loopNodeData.loop_variables || []
+
+    if (loopVariables.length) {
+      const loopVar = {
+        nodeId: loopNode?.id,
+        title: t('workflow.nodes.loop.currentLoop'),
+        vars: loopNodeData.loop_variables?.map((v) => {
+          return {
+            variable: v.label,
+            type: v.var_type,
+          }
+        }) || [],
+      }
+      beforeNodesOutputVars.unshift(loopVar)
+    }
   }
   return beforeNodesOutputVars
 }

@@ -39,6 +39,7 @@ export enum BlockEnum {
   Agent = 'agent',
   Loop = 'loop',
   LoopStart = 'loop-start',
+  LoopEnd = 'loop-end',
 }
 
 export enum ControlMode {
@@ -255,6 +256,11 @@ export enum VarType {
   arrayObject = 'array[object]',
   arrayFile = 'array[file]',
   any = 'any',
+}
+
+export enum ValueType {
+  variable = 'variable',
+  constant = 'constant',
 }
 
 export type Var = {
