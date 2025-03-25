@@ -280,6 +280,7 @@ export type NodeOutPutVar = {
   title: string
   vars: Var[]
   isStartNode?: boolean
+  isLoop?: boolean
 }
 
 export type Block = {
