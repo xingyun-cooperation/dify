@@ -61,6 +61,28 @@ class LoopNode(BaseNode[LoopNodeData]):
         variable_pool = self.graph_runtime_state.variable_pool
         variable_pool.add([self.node_id, "index"], 0)
 
+        # Initialize loop variables
+        loop_variable_selectors = []
+        for loop_variable in self.node_data.loop_variables:
+            value_processor = {
+                'constant': lambda var=loop_variable: var.value,
+                'variable': lambda var=loop_variable: variable_pool.get(var.variable_selector)
+            }
+
+            if loop_variable.value_type not in value_processor:
+                raise ValueError(f"Invalid value type '{loop_variable.value_type}' "
+                                f"for loop variable {loop_variable.label}")
+
+            variable_pool.add(
+                [self.node_id, loop_variable.label],
+                value_processor[loop_variable.value_type]()
+            )
+            loop_variable_selectors.append([self.node_id, loop_variable.label])
+            inputs.update({loop_variable.label: value_processor[loop_variable.value_type]()})
+
+
+
+
         from core.workflow.graph_engine.graph_engine import GraphEngine
 
         graph_engine = GraphEngine(
@@ -211,6 +233,8 @@ class LoopNode(BaseNode[LoopNodeData]):
                 if check_break_result:
                     break
 
+                self.node_data.outputs=loop_variable_selectors
+
                 # Move to next loop
                 next_index = current_index + 1
                 variable_pool.add([self.node_id, "index"], next_index)
@@ -275,6 +299,7 @@ class LoopNode(BaseNode[LoopNodeData]):
         finally:
             # Clean up
             variable_pool.remove([self.node_id, "index"])
+            # return self.node_data.outputs
 
     def _handle_event_metadata(
         self,
