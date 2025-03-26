@@ -14,6 +14,7 @@ from core.workflow.nodes.knowledge_retrieval import KnowledgeRetrievalNode
 from core.workflow.nodes.list_operator import ListOperatorNode
 from core.workflow.nodes.llm import LLMNode
 from core.workflow.nodes.loop import LoopNode, LoopStartNode
+from core.workflow.nodes.loop.loop_end_node import LoopEndNode
 from core.workflow.nodes.parameter_extractor import ParameterExtractorNode
 from core.workflow.nodes.question_classifier import QuestionClassifierNode
 from core.workflow.nodes.start import StartNode
@@ -93,6 +94,10 @@ NODE_TYPE_CLASSES_MAPPING: Mapping[NodeType, Mapping[str, type[BaseNode]]] = {
     NodeType.LOOP_START: {
         LATEST_VERSION: LoopStartNode,
         "1": LoopStartNode,
+    },
+    NodeType.LOOP_END: {
+        LATEST_VERSION: LoopEndNode,
+        "1": LoopEndNode,
     },
     NodeType.PARAMETER_EXTRACTOR: {
         LATEST_VERSION: ParameterExtractorNode,

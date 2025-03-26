@@ -23,7 +23,7 @@ class LoopNodeData(BaseLoopNodeData):
     loop_count: int  # Maximum number of loops
     break_conditions: list[Condition]  # Conditions to break the loop
     logical_operator: Literal["and", "or"]
-    loop_variables: list[LoopVariableData]
+    loop_variables: Optional[list[LoopVariableData]] = None
     outputs: Optional[list[VariableSelector]] = None
 
 

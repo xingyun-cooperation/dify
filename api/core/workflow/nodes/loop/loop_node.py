@@ -66,8 +66,8 @@ class LoopNode(BaseNode[LoopNodeData]):
         for loop_variable in self.node_data.loop_variables:
             value_processor = {
                 'constant': lambda var=loop_variable: var.value if var.var_type == 'string'
-                            else IntegerSegment(value=var.value) if var.var_type == 'number'
-                            else ObjectSegment(value=var.value) if var.var_type == 'object'
+                            else IntegerSegment(value=var.value).value if var.var_type == 'number'
+                            else ObjectSegment(value=var.value).value if var.var_type == 'object'
                             else None,
                 'variable': lambda var=loop_variable: variable_pool.get(var.value).value
             }
@@ -82,8 +82,6 @@ class LoopNode(BaseNode[LoopNodeData]):
             )
             loop_variable_selectors.update({loop_variable.label: [self.node_id, loop_variable.label]})
             inputs.update({loop_variable.label: value_processor[loop_variable.value_type]()})
-
-
 
 
         from core.workflow.graph_engine.graph_engine import GraphEngine
@@ -281,6 +279,7 @@ class LoopNode(BaseNode[LoopNodeData]):
                     status=WorkflowNodeExecutionStatus.SUCCEEDED,
                     metadata={NodeRunMetadataKey.TOTAL_TOKENS: graph_engine.graph_runtime_state.total_tokens},
                     outputs=self.node_data.outputs,
+                    inputs=inputs,
                 )
             )
 
