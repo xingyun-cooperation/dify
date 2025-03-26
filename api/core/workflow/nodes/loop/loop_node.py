@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Any, cast
 
 from configs import dify_config
-from core.variables import IntegerSegment
+from core.variables import IntegerSegment, ObjectSegment
 from core.workflow.entities.node_entities import NodeRunMetadataKey, NodeRunResult
 from core.workflow.graph_engine.entities.event import (
     BaseGraphEvent,
@@ -62,11 +62,14 @@ class LoopNode(BaseNode[LoopNodeData]):
         variable_pool.add([self.node_id, "index"], 0)
 
         # Initialize loop variables
-        loop_variable_selectors = []
+        loop_variable_selectors = {}
         for loop_variable in self.node_data.loop_variables:
             value_processor = {
-                'constant': lambda var=loop_variable: var.value,
-                'variable': lambda var=loop_variable: variable_pool.get(var.variable_selector)
+                'constant': lambda var=loop_variable: var.value if var.var_type == 'string'
+                            else IntegerSegment(value=var.value).value if var.var_type == 'number'
+                            else ObjectSegment(value=var.value).value if var.var_type == 'object'
+                            else None,
+                'variable': lambda var=loop_variable: variable_pool.get(var.value).value
             }
 
             if loop_variable.value_type not in value_processor:
@@ -77,10 +80,8 @@ class LoopNode(BaseNode[LoopNodeData]):
                 [self.node_id, loop_variable.label],
                 value_processor[loop_variable.value_type]()
             )
-            loop_variable_selectors.append([self.node_id, loop_variable.label])
+            loop_variable_selectors.update({loop_variable.label: [self.node_id, loop_variable.label]})
             inputs.update({loop_variable.label: value_processor[loop_variable.value_type]()})
-
-
 
 
         from core.workflow.graph_engine.graph_engine import GraphEngine
@@ -148,6 +149,13 @@ class LoopNode(BaseNode[LoopNodeData]):
                         and not isinstance(event, NodeRunStreamChunkEvent)
                     ):
                         continue
+
+                    if (
+                        isinstance(event, BaseNodeEvent)
+                        and event.node_type == NodeType.LOOP_END
+                        and not isinstance(event, NodeRunStreamChunkEvent)
+                    ):
+                        break
 
                     if isinstance(event, NodeRunSucceededEvent):
                         yield self._handle_event_metadata(event=event, iter_run_index=current_index)
@@ -232,8 +240,10 @@ class LoopNode(BaseNode[LoopNodeData]):
 
                 if check_break_result:
                     break
-
-                self.node_data.outputs=loop_variable_selectors
+                outputs = {}
+                for loop_variable_key,loop_variable_selector in loop_variable_selectors.items():
+                    outputs.update({loop_variable_key:variable_pool.get(loop_variable_selector).value})
+                self.node_data.outputs=outputs
 
                 # Move to next loop
                 next_index = current_index + 1
@@ -245,7 +255,7 @@ class LoopNode(BaseNode[LoopNodeData]):
                     loop_node_type=self.node_type,
                     loop_node_data=self.node_data,
                     index=next_index,
-                    pre_loop_output=None,
+                    pre_loop_output=self.node_data.outputs,
                 )
 
             # Loop completed successfully
@@ -256,6 +266,7 @@ class LoopNode(BaseNode[LoopNodeData]):
                 loop_node_data=self.node_data,
                 start_at=start_at,
                 inputs=inputs,
+                outputs=self.node_data.outputs,
                 steps=loop_count,
                 metadata={
                     NodeRunMetadataKey.TOTAL_TOKENS: graph_engine.graph_runtime_state.total_tokens,
@@ -267,6 +278,8 @@ class LoopNode(BaseNode[LoopNodeData]):
                 run_result=NodeRunResult(
                     status=WorkflowNodeExecutionStatus.SUCCEEDED,
                     metadata={NodeRunMetadataKey.TOTAL_TOKENS: graph_engine.graph_runtime_state.total_tokens},
+                    outputs=self.node_data.outputs,
+                    inputs=inputs,
                 )
             )
 
@@ -299,7 +312,6 @@ class LoopNode(BaseNode[LoopNodeData]):
         finally:
             # Clean up
             variable_pool.remove([self.node_id, "index"])
-            # return self.node_data.outputs
 
     def _handle_event_metadata(
         self,
