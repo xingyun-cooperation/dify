@@ -273,6 +273,7 @@ export type Var = {
   required?: boolean
   des?: string
   isException?: boolean
+  isLoopVariable?: boolean
 }
 
 export type NodeOutPutVar = {
