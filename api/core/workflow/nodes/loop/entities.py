@@ -36,6 +36,13 @@ class LoopStartNodeData(BaseNodeData):
     pass
 
 
+class LoopEndNodeData(BaseNodeData):
+    """
+    Loop End Node Data.
+    """
+    pass
+
+
 class LoopState(BaseLoopState):
     """
     Loop State.
