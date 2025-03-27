@@ -28,7 +28,8 @@ export const getHasChildren = (schema: Field) => {
 
 export const inferType = (value: any): Type => {
   if (Array.isArray(value)) return Type.array
-  if (typeof value === 'boolean') return Type.boolean
+  // type boolean will be treated as string
+  if (typeof value === 'boolean') return Type.string
   if (typeof value === 'number') return Type.number
   if (typeof value === 'string') return Type.string
   if (typeof value === 'object') return Type.object
@@ -103,4 +104,24 @@ export const getValidationErrorMessage = (errors: ErrorObject[]) => {
     return `Error: ${error.instancePath} ${error.message} Details: ${JSON.stringify(error.params)}`
   }).join('; ')
   return message
+}
+
+export const convertBooleanToString = (schema: any) => {
+  if (schema.type === Type.boolean)
+    schema.type = Type.string
+  if (schema.type === Type.array && schema.items && schema.items.type === Type.boolean)
+    schema.items.type = Type.string
+  if (schema.type === Type.object) {
+    schema.properties = Object.entries(schema.properties).reduce((acc, [key, value]) => {
+      acc[key] = convertBooleanToString(value)
+      return acc
+    }, {} as any)
+  }
+  if (schema.type === Type.array && schema.items && schema.items.type === Type.object) {
+    schema.items.properties = Object.entries(schema.items.properties).reduce((acc, [key, value]) => {
+      acc[key] = convertBooleanToString(value)
+      return acc
+    }, {} as any)
+  }
+  return schema
 }

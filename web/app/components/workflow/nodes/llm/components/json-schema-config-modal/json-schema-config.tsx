@@ -9,11 +9,12 @@ import { useTranslation } from 'react-i18next'
 import Button from '@/app/components/base/button'
 import VisualEditor from './visual-editor'
 import SchemaEditor from './schema-editor'
-import { getValidationErrorMessage, jsonToSchema, validateSchemaAgainstDraft7 } from '../../utils'
+import { convertBooleanToString, getValidationErrorMessage, jsonToSchema, validateSchemaAgainstDraft7 } from '../../utils'
 import { MittProvider, VisualEditorContextProvider } from './visual-editor/context'
 import ErrorMessage from './error-message'
 import { useVisualEditorStore } from './visual-editor/store'
 import Toast from '@/app/components/base/toast'
+import { useGetLanguage } from '@/context/i18n'
 
 type JsonSchemaConfigProps = {
   defaultSchema?: SchemaRoot
@@ -38,12 +39,21 @@ const DEFAULT_SCHEMA: SchemaRoot = {
   additionalProperties: false,
 }
 
+const HELP_DOC_URL = {
+  zh_Hans: 'https://docs.dify.ai/zh-hans/guides/workflow/structured-outputs',
+  en_US: 'https://docs.dify.ai/guides/workflow/structured-outputs',
+  ja_JP: 'https://docs.dify.ai/ja-jp/guides/workflow/structured-outputs',
+}
+
+type LocaleKey = keyof typeof HELP_DOC_URL
+
 const JsonSchemaConfig: FC<JsonSchemaConfigProps> = ({
   defaultSchema,
   onSave,
   onClose,
 }) => {
   const { t } = useTranslation()
+  const locale = useGetLanguage() as LocaleKey
   const [currentTab, setCurrentTab] = useState(SchemaView.VisualEditor)
   const [jsonSchema, setJsonSchema] = useState(defaultSchema || DEFAULT_SCHEMA)
   const [json, setJson] = useState(JSON.stringify(jsonSchema, null, 2))
@@ -64,7 +74,8 @@ const JsonSchemaConfig: FC<JsonSchemaConfigProps> = ({
     if (currentTab === value) return
     if (currentTab === SchemaView.JsonSchema) {
       try {
-        const schema = JSON.parse(json)
+        const parsedJson = JSON.parse(json)
+        const schema = convertBooleanToString(parsedJson)
         setParseError(null)
         const ajvError = validateSchemaAgainstDraft7(schema)
         if (ajvError.length > 0) {
@@ -106,7 +117,7 @@ const JsonSchemaConfig: FC<JsonSchemaConfigProps> = ({
       setJson(JSON.stringify(schema, null, 2))
   }, [currentTab])
 
-  const handleSubmit = useCallback((schema: string) => {
+  const handleSubmit = useCallback((schema: any) => {
     const jsonSchema = jsonToSchema(schema) as SchemaRoot
     if (currentTab === SchemaView.VisualEditor)
       setJsonSchema(jsonSchema)
@@ -227,7 +238,7 @@ const JsonSchemaConfig: FC<JsonSchemaConfigProps> = ({
       <div className='flex items-center gap-x-2 p-6 pt-5'>
         <a
           className='flex grow items-center gap-x-1 text-text-accent'
-          href='https://json-schema.org/' // todo: replace with documentation link
+          href={HELP_DOC_URL[locale]}
           target='_blank'
           rel='noopener noreferrer'
         >
