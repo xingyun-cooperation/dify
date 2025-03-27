@@ -11,21 +11,23 @@ class LoopVariableData(BaseModel):
     """
     Loop Variable Data.
     """
+
     label: str
-    var_type: Literal["string", "number", "object"]
+    var_type: Literal["string", "number", "object", "array[string]", "array[number]", "array[object]"]
     value_type: Literal["variable", "constant"]
     value: Any | list[str]
+
 
 class LoopNodeData(BaseLoopNodeData):
     """
     Loop Node Data.
     """
+
     loop_count: int  # Maximum number of loops
     break_conditions: list[Condition]  # Conditions to break the loop
     logical_operator: Literal["and", "or"]
     loop_variables: Optional[list[LoopVariableData]] = None
     outputs: Optional[list[VariableSelector]] = None
-
 
 
 class LoopStartNodeData(BaseNodeData):
@@ -40,6 +42,7 @@ class LoopEndNodeData(BaseNodeData):
     """
     Loop End Node Data.
     """
+
     pass
 
 
