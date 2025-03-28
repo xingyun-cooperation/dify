@@ -22,7 +22,7 @@ COPY package.json .
 # RUN pnpm install --frozen-lockfile --registry https://registry.npmmirror.com/
 
 # ignore install failed but not necessary package canvas
-RUN pnpm install --frozen-lockfile --no-optional
+RUN pnpm install --frozen-lockfile
 
 # build resources
 FROM base AS builder
