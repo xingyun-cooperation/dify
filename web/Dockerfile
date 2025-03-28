@@ -21,7 +21,7 @@ COPY package.json .
 # if you located in China, you can use taobao registry to speed up
 # RUN pnpm install --frozen-lockfile --registry https://registry.npmmirror.com/
 
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # build resources
 FROM base AS builder
