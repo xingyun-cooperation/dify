@@ -21,8 +21,7 @@ COPY package.json .
 # if you located in China, you can use taobao registry to speed up
 # RUN pnpm install --frozen-lockfile --registry https://registry.npmmirror.com/
 
-# ignore install failed but not necessary package canvas
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # build resources
 FROM base AS builder
