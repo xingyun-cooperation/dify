@@ -251,6 +251,12 @@ const Link = ({ node, ...props }: any) => {
 }
 
 export function Markdown(props: { content: string; className?: string; customDisallowedElements?: string[] }) {
+  // TODO 可以替换此处的解析逻辑
+  if (props.content?.startsWith("xingyunlowcode")) {
+    return (
+      <iframe width={"100%"} height={"300px"} src={props.content.split("\n")[1]}></iframe>
+    )
+  }
   const latexContent = flow([
     preprocessThinkTag,
     preprocessLaTeX,
